@@ -154,11 +154,13 @@ func Local(a, b string, sc Scoring) (*Result, error) {
 		dp[i] = make([]int, n+1)
 	}
 	bestScore, bestI, bestJ := 0, 0, 0
-	mat := IdentityMatrix()
 	for i := 1; i <= m; i++ {
 		for j := 1; j <= n; j++ {
-			s := mat.Score(a[i-1], b[j-1])
-			v := max4(dp[i-1][j]+gap, dp[i][j-1]+gap, 0, dp[i-1][j-1]+s)
+			s := sc.Mismatch
+			if a[i-1] == b[j-1] {
+				s = sc.Match
+			}
+			v := max4(0, dp[i-1][j-1]+s, dp[i-1][j]+gap, dp[i][j-1]+gap)
 			dp[i][j] = v
 			if v > bestScore {
 				bestScore = v
@@ -175,22 +177,23 @@ func Local(a, b string, sc Scoring) (*Result, error) {
 	var alignA, alignB []byte
 	i, j := bestI, bestJ
 	for i > 0 && j > 0 && dp[i][j] > 0 {
-		s := mat.Score(a[i-1], b[j-1])
-		if dp[i][j] == dp[i-1][j]+gap {
+		s := sc.Mismatch
+		if a[i-1] == b[j-1] {
+			s = sc.Match
+		}
+		if dp[i][j] == dp[i-1][j-1]+s {
+			alignA = append(alignA, a[i-1])
+			alignB = append(alignB, b[j-1])
+			i--
+			j--
+		} else if dp[i][j] == dp[i-1][j]+gap {
 			alignA = append(alignA, a[i-1])
 			alignB = append(alignB, '-')
 			i--
-		} else if dp[i][j] == dp[i][j-1]+gap {
+		} else {
 			alignA = append(alignA, '-')
 			alignB = append(alignB, b[j-1])
 			j--
-		} else if dp[i][j] == dp[i-1][j-1]+s {
-			alignA = append(alignA, a[i-1])
-			alignB = append(alignB, b[j-1])
-			i--
-			j--
-		} else {
-			break
 		}
 	}
 	reverse(alignA)

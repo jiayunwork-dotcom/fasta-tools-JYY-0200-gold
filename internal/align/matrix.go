@@ -69,7 +69,7 @@ func IdentityMatrix() *SubMatrix {
 		scores[a] = make(map[byte]int)
 		for _, b := range bases {
 			if a == b {
-				scores[a][b] = 0
+				scores[a][b] = 1
 			}
 		}
 	}
@@ -107,18 +107,6 @@ func GlobalWithMatrix(a, b string, m *SubMatrix, gapOpen int) (*Result, error) {
 	var alignA, alignB []byte
 	i, j := la, lb
 	for i > 0 || j > 0 {
-		if i > 0 && dp[i][j] == dp[i-1][j]+gapOpen {
-			alignA = append(alignA, a[i-1])
-			alignB = append(alignB, '-')
-			i--
-			continue
-		}
-		if j > 0 && dp[i][j] == dp[i][j-1]+gapOpen {
-			alignA = append(alignA, '-')
-			alignB = append(alignB, b[j-1])
-			j--
-			continue
-		}
 		if i > 0 && j > 0 {
 			s := m.Score(a[i-1], b[j-1])
 			if dp[i][j] == dp[i-1][j-1]+s {
@@ -129,7 +117,7 @@ func GlobalWithMatrix(a, b string, m *SubMatrix, gapOpen int) (*Result, error) {
 				continue
 			}
 		}
-		if i > 0 {
+		if i > 0 && dp[i][j] == dp[i-1][j]+gapOpen {
 			alignA = append(alignA, a[i-1])
 			alignB = append(alignB, '-')
 			i--
